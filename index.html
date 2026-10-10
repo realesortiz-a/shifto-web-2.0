@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-[#0b132b]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHIFTO 2.0 - Tu laboratorio personal de cifrado</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkBg: '#0b132b',
+                        cardBg: '#1c2541',
+                        inputBg: '#0f172a',
+                        accentMint: '#00d294',
+                        accentMintHover: '#00b882',
+                        accentCyan: '#38bdf8',
+                        textMuted: '#94a3b8',
+                        borderDark: '#2a3859'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a3859;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b4f7a;
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(0, 210, 148, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-full font-sans text-gray-100 bg-[#0b132b] flex flex-col justify-between selection:bg-accentMint selection:text-black">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 ease-in-out bg-accentMint text-gray-900 font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 border border-emerald-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-message">Notificación</span>
+    </div>
+
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+        
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-accentMint via-teal-300 to-cyan-400 mb-2">
+                SHIFTO 2.0
+            </h1>
+            <p class="text-gray-400 text-base sm:text-lg flex items-center justify-center gap-2 font-medium">
+                Tu laboratorio personal de cifrado 🔒
+            </p>
+        </header>
+
+        <!-- Main Cards Grid (Codificar / Descodificar LADO A LADO) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-12 items-start">
+            
+            <!-- PANEL 1: CODIFICAR -->
+            <div class="bg-cardBg border border-borderDark/80 rounded-2xl p-5 sm:p-7 shadow-xl glow-effect flex flex-col justify-between h-full">
+                <div>
+                    <!-- Section Header -->
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="text-2xl">📝</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Codificar</h2>
+                    </div>
+
+                    <!-- Input 1: Texto Original -->
+                    <div class="mb-5">
+                        <label for="enc-input" class="block text-sm font-semibold text-gray-300 mb-2">
+                            Texto original
+                        </label>
+                        <textarea id="enc-input" rows="4" 
+                            class="w-full bg-inputBg border border-borderDark text-gray-100 placeholder-gray-500 rounded-xl p-3.5 focus:outline-none focus:border-accentMint focus:ring-1 focus:ring-accentMint transition font-mono text-sm resize-y"
+                            placeholder="Escribe tu mensaje..."></textarea>
+                        
+                        <!-- Buttons row 1 -->
+                        <div class="flex flex-wrap gap-2.5 mt-3">
+                            <button id="btn-encode" onclick="encodeMessage()" 
+                                class="bg-accentMint hover:bg-accentMintHover text-gray-950 font-bold px-4 sm:px-5 py-2.5 rounded-xl transition duration-150 flex items-center gap-2 text-sm shadow-md active:scale-95">
+                                Codificar →
+                            </button>
+                            <button onclick="pasteToTextarea('enc-input')" 
+                                class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-3.5 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                                Pegar
+                            </button>
+                            <button onclick="copyFromTextarea('enc-input', 'Texto original copiado')" 
+                                class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-3.5 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                                Copiar entrada
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Output 1: Texto Cifrado -->
+                    <div class="mb-4">
+                        <label for="enc-output" class="block text-sm font-semibold text-gray-300 mb-2">
+                            Texto cifrado
+                        </label>
+                        <textarea id="enc-output" rows="4" readonly
+                            class="w-full bg-inputBg/70 border border-borderDark text-accentMint placeholder-gray-500 rounded-xl p-3.5 focus:outline-none font-mono text-sm resize-y select-all"
+                            placeholder="Resultado cifrado..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Bottom action buttons for Panel 1 -->
+                <div class="flex flex-wrap gap-2.5 mt-2 pt-3 border-t border-borderDark/50">
+                    <button onclick="copyFromTextarea('enc-output', 'Texto cifrado copiado')" 
+                        class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-4 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                        Copiar resultado
+                    </button>
+                    <button onclick="useForDecoding()" 
+                        class="bg-borderDark/60 hover:bg-borderDark text-cyan-300 hover:text-cyan-200 font-medium px-4 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark flex items-center gap-1.5">
+                        Usar para descodificar ↗
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 2: DESCODIFICAR -->
+            <div class="bg-cardBg border border-borderDark/80 rounded-2xl p-5 sm:p-7 shadow-xl glow-effect flex flex-col justify-between h-full">
+                <div>
+                    <!-- Section Header -->
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="text-2xl">🔓</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Descodificar</h2>
+                    </div>
+
+                    <!-- Input 2: Texto Cifrado -->
+                    <div class="mb-5">
+                        <label for="dec-input" class="block text-sm font-semibold text-gray-300 mb-2">
+                            Texto cifrado
+                        </label>
+                        <textarea id="dec-input" rows="4" 
+                            class="w-full bg-inputBg border border-borderDark text-accentMint placeholder-gray-500 rounded-xl p-3.5 focus:outline-none focus:border-accentMint focus:ring-1 focus:ring-accentMint transition font-mono text-sm resize-y"
+                            placeholder="Pega aquí el código..."></textarea>
+                        
+                        <!-- Buttons row 1 -->
+                        <div class="flex flex-wrap gap-2.5 mt-3">
+                            <button id="btn-decode" onclick="decodeMessage()" 
+                                class="bg-accentMint hover:bg-accentMintHover text-gray-950 font-bold px-4 sm:px-5 py-2.5 rounded-xl transition duration-150 flex items-center gap-2 text-sm shadow-md active:scale-95">
+                                Descodificar →
+                            </button>
+                            <button onclick="pasteToTextarea('dec-input')" 
+                                class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-3.5 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                                Pegar
+                            </button>
+                            <button onclick="copyFromTextarea('dec-input', 'Texto cifrado copiado')" 
+                                class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-3.5 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                                Copiar entrada
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Output 2: Texto Descodificado -->
+                    <div class="mb-4">
+                        <label for="dec-output" class="block text-sm font-semibold text-gray-300 mb-2">
+                            Texto descodificado
+                        </label>
+                        <textarea id="dec-output" rows="4" readonly
+                            class="w-full bg-inputBg/70 border border-borderDark text-gray-100 placeholder-gray-500 rounded-xl p-3.5 focus:outline-none font-mono text-sm resize-y select-all"
+                            placeholder="Mensaje recuperado..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Bottom action buttons for Panel 2 -->
+                <div class="flex flex-wrap gap-2.5 mt-2 pt-3 border-t border-borderDark/50">
+                    <button onclick="copyFromTextarea('dec-output', 'Mensaje recuperado copiado')" 
+                        class="bg-borderDark/60 hover:bg-borderDark text-gray-200 font-medium px-4 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark">
+                        Copiar resultado
+                    </button>
+                    <button onclick="useAsOriginal()" 
+                        class="bg-borderDark/60 hover:bg-borderDark text-cyan-300 hover:text-cyan-200 font-medium px-4 py-2.5 rounded-xl transition duration-150 text-sm active:scale-95 border border-borderDark flex items-center gap-1.5">
+                        Usar como texto original ↗
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION: Manual de SHIFT0 2.0 -->
+        <div class="bg-cardBg border border-borderDark/80 rounded-2xl p-6 sm:p-8 shadow-xl mb-12">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-2xl">📘</span>
+                <h2 class="text-2xl font-bold text-white tracking-wide">Manual de SHIFT0 2.0</h2>
+            </div>
+
+            <!-- Subsección 1: Cómo usar la página -->
+            <div class="mb-8">
+                <h3 class="text-lg font-bold text-accentMint mb-4">Cómo usar la página</h3>
+                <ol class="list-decimal list-inside space-y-2.5 text-gray-200 text-sm sm:text-base leading-relaxed pl-1">
+                    <li>Escribe un mensaje y pulsa <strong class="text-white font-semibold">Codificar</strong>.</li>
+                    <li>Para descodificar, pega el código en la sección de descodificación y pulsa <strong class="text-white font-semibold">Descodificar</strong>.</li>
+                    <li>Usa <strong class="text-white font-semibold">Copiar</strong> para copiar texto y <strong class="text-white font-semibold">Pegar</strong> para insertar lo que tengas en el portapapeles.</li>
+                    <li>Pulsa <strong class="text-white font-semibold">Usar para descodificar</strong> para transferir el resultado cifrado al campo correspondiente.</li>
+                    <li>El historial permite recuperar las conversiones anteriores de esta sesión.</li>
+                </ol>
+            </div>
+
+            <!-- Subsección 2: Reglas conocidas -->
+            <div>
+                <h3 class="text-lg font-bold text-accentMint mb-4">Reglas conocidas</h3>
+                <ul class="list-disc list-inside space-y-2.5 text-gray-200 text-sm sm:text-base leading-relaxed pl-1">
+                    <li>Las letras avanzan una posición en el alfabeto, con vuelta al inicio.</li>
+                    <li>Después del desplazamiento, se toma la posición alfabética y se suma 3.</li>
+                    <li>Mayúsculas y minúsculas usan formatos numéricos diferentes.</li>
+                    <li>La <strong class="text-white font-semibold">Ñ</strong> es una letra propia, entre N y O.</li>
+                    <li>Las vocales acentuadas llevan el prefijo <strong class="text-white font-semibold">6</strong>. Ejemplo: <strong class="font-mono text-cyan-300">Á = 600005</strong>.</li>
+                    <li><strong class="text-white font-semibold">Ü</strong> usa el prefijo <strong class="text-white font-semibold">606</strong>. Ejemplo: <strong class="font-mono text-cyan-300">Ü = 606000022</strong>.</li>
+                    <li>Los espacios se representan con <strong class="font-mono text-cyan-300">|</strong>.</li>
+                    <li>Los dígitos se sustituyen directamente: <strong class="font-mono text-gray-300">0→A, 1→B, 2→C, 3→D, 4→E, 5→F, 6→G, 7→H, 8→I, 9→J</strong>. Ejemplo: <strong class="font-mono text-cyan-300">2026→CACG</strong>.</li>
+                    <li>Los símbolos usan el formato <strong class="font-mono text-white">80 + código asignado + 08</strong>. Ejemplo: <strong class="font-mono text-cyan-300">! → 80108</strong>.</li>
+                    <li>El punto, la coma y los dos puntos permanecen sin codificar.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SECTION: Historial de Conversiones -->
+        <div class="bg-cardBg border border-borderDark/80 rounded-2xl p-6 sm:p-8 shadow-xl">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📜</span>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Historial de Conversiones</h2>
+                </div>
+                <button onclick="clearHistory()" 
+                    class="text-xs sm:text-sm text-gray-400 hover:text-red-400 bg-inputBg border border-borderDark hover:border-red-500/50 px-3 py-1.5 rounded-lg transition">
+                    Limpiar historial
+                </button>
+            </div>
+
+            <div id="history-container" class="space-y-3">
+                <p id="history-empty" class="text-gray-500 text-sm text-center py-6">
+                    Aún no has realizado conversiones en esta sesión.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-xs border-t border-borderDark/40 mt-8">
+        SHIFTO 2.0 &copy; 2026 — Laboratorio personal de cifrado
+    </footer>
+
+    <!-- JAVASCRIPT CIPHER ENGINE & INTERACTION LOGIC -->
+    <script>
+        
+        // Alphabet array: Spanish 27 letters (including Ñ between N and O)
+        const ALPHABET = [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'Ñ', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        ];
+
+        // Symbol map (symbol -> assigned number)
+        const SYMBOL_MAP = {
+            '!': '10',
+            '"': '20',
+            '#': '30',
+            '$': '40',
+            '%': '50',
+            '?': '60',
+            '¿': '60',
+            '/': '70',
+            '(': '80',
+            ')': '90',
+            '=': '00'
+        };
+
+        // Inverse symbol lookup
+        const REVERSE_SYMBOL_MAP = {
+            '80108': '!',
+            '80208': '"',
+            '80308': '#',
+            '80408': '$',
+            '80508': '%',
+            '80608': '?',
+            '80708': '/',
+            '80808': '(',
+            '80908': ')',
+            '80008': '='
+        };
+
+        // Real number direct digit mapping
+        const DIGIT_TO_LETTER = {
+            '0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E',
+            '5': 'F', '6': 'G', '7': 'H', '8': 'I', '9': 'J'
+        };
+
+        const LETTER_TO_DIGIT = {
+            'A': '0', 'B': '1', 'C': '2', 'D': '3', 'E': '4',
+            'F': '5', 'G': '6', 'H': '7', 'I': '8', 'J': '9'
+        };
+
+        // Accent vowel mappings
+        const ACCENT_VOWELS = {
+            'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+            'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u'
+        };
+
+        function encodeMessage() {
+            const input = document.getElementById('enc-input').value;
+            if (!input) {
+                showToast('Escribe algún texto para codificar');
+                return;
+            }
+
+            let result = '';
+            let i = 0;
+
+            while (i < input.length) {
+                const char = input[i];
+
+                // 1. Check for real numbers (sequence of digits 0-9)
+                if (/[0-9]/.test(char)) {
+                    result += DIGIT_TO_LETTER[char];
+                    i++;
+                    continue;
+                }
+
+                // 2. Spaces
+                if (char === ' ') {
+                    result += '|';
+                    i++;
+                    continue;
+                }
+
+                // 3. Unchanged punctuation (. , :)
+                if (char === '.' || char === ',' || char === ':') {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // 4. Symbols (80 + code + 08)
+                if (SYMBOL_MAP[char] !== undefined) {
+                    result += `80${SYMBOL_MAP[char]}08`;
+                    i++;
+                    continue;
+                }
+
+                // 5. Special Vowels (Diæresis Ü/ü and Accents Á/É/Í/Ó/Ú/á/é/í/ó/ú)
+                let isUmlaut = false;
+                let isAccent = false;
+                let baseChar = char;
+
+                if (char === 'Ü' || char === 'ü') {
+                    isUmlaut = true;
+                    baseChar = (char === 'Ü') ? 'U' : 'u';
+                } else if (ACCENT_VOWELS[char]) {
+                    isAccent = true;
+                    baseChar = ACCENT_VOWELS[char];
+                }
+
+                // Process base letter (uppercase or lowercase)
+                const isUpper = baseChar === baseChar.toUpperCase() && /[A-ZÑa-zñ]/.test(baseChar);
+                const upperChar = baseChar.toUpperCase();
+                const letterIdx = ALPHABET.indexOf(upperChar);
+
+                if (letterIdx !== -1) {
+                    // Shift 1 position forward in alphabet (wrap around Z -> A)
+                    const shiftedIdx = (letterIdx + 1) % ALPHABET.length;
+                    // Position is 1-indexed for the number calculation
+                    const posNumber = (shiftedIdx + 1) + 3;
+
+                    let codeStr = '';
+                    if (isUpper) {
+                        // Uppercase: 4 zeros in front (e.g., 5 -> 00005, 12 -> 00012)
+                        codeStr = '000' + String(posNumber).padStart(2, '0');
+                    } else {
+                        // Lowercase: 2 zeros in front, 2 zeros behind (e.g., 5 -> 00500, 12 -> 001200)
+                        codeStr = '00' + posNumber + '00';
+                    }
+
+                    // Apply prefixes
+                    if (isUmlaut) {
+                        codeStr = '606' + codeStr;
+                    } else if (isAccent) {
+                        codeStr = '6' + codeStr;
+                    }
+
+                    result += codeStr;
+                    i++;
+                    continue;
+                }
+
+                // Fallback for any unsupported character
+                result += char;
+                i++;
+            }
+
+            document.getElementById('enc-output').value = result;
+            addHistoryItem('Codificación', input, result);
+            showToast('¡Texto codificado con éxito!');
+        }
+
+        function decodeMessage() {
+            const input = document.getElementById('dec-input').value;
+            if (!input) {
+                showToast('Pega un código cifrado para descodificar');
+                return;
+            }
+
+            let result = '';
+            let i = 0;
+
+            while (i < input.length) {
+                const char = input[i];
+
+                // 1. Spaces |
+                if (char === '|') {
+                    result += ' ';
+                    i++;
+                    continue;
+                }
+
+                // 2. Unchanged punctuation (. , :)
+                if (char === '.' || char === ',' || char === ':') {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // 3. Real Numbers encoded as Capital Letters A-J (outside numerical codes)
+                // We check if it's A-J AND not part of a symbol/number sequence start '0'
+                if (/[A-J]/.test(char)) {
+                    result += LETTER_TO_DIGIT[char];
+                    i++;
+                    continue;
+                }
+
+                // 4. Check for Symbol code: 80XX08 (5 digits starting with 80 and ending with 08)
+                if (input.substr(i, 2) === '80' && input.substr(i + 3, 2) === '08' && i + 5 <= input.length) {
+                    const symCode = input.substr(i, 5);
+                    if (REVERSE_SYMBOL_MAP[symCode]) {
+                        result += REVERSE_SYMBOL_MAP[symCode];
+                        i += 5;
+                        continue;
+                    }
+                }
+
+                // 5. Letter codes parsing
+                // Prefixes: 606 (ü/Ü), 6 (accent), or direct 00...
+                let isUmlaut = false;
+                let isAccent = false;
+                let ptr = i;
+
+                if (input.substr(ptr, 3) === '606') {
+                    isUmlaut = true;
+                    ptr += 3;
+                } else if (input[ptr] === '6') {
+                    isAccent = true;
+                    ptr += 1;
+                }
+
+                // Check Uppercase Pattern: 000 + (1 or 2 digits)
+                if (input.substr(ptr, 3) === '000') {
+                    let numStr = '';
+                    let tempPtr = ptr + 3;
+                    while (tempPtr < input.length && /[0-9]/.test(input[tempPtr])) {
+                        numStr += input[tempPtr];
+                        tempPtr++;
+                    }
+
+                    if (numStr.length > 0) {
+                        const val = parseInt(numStr, 10);
+                        const posNumber = val - 3; // Reverse +3
+                        const shiftedIdx = posNumber - 1; // 1-indexed to 0-indexed
+                        
+                        // Inverse +1 shift (wrap around)
+                        let origIdx = (shiftedIdx - 1) % ALPHABET.length;
+                        if (origIdx < 0) origIdx += ALPHABET.length;
+
+                        let letter = ALPHABET[origIdx];
+
+                        if (isUmlaut) {
+                            letter = 'Ü';
+                        } else if (isAccent) {
+                            const accents = { 'A': 'Á', 'E': 'É', 'I': 'Í', 'O': 'Ó', 'U': 'Ú' };
+                            letter = accents[letter] || letter;
+                        }
+
+                        result += letter;
+                        i = tempPtr;
+                        continue;
+                    }
+                }
+
+                // Check Lowercase Pattern: 00 + (1 or 2 digits) + 00
+                if (input.substr(ptr, 2) === '00') {
+                    // Find where '00' trailing sequence occurs
+                    let numStr = '';
+                    let tempPtr = ptr + 2;
+                    while (tempPtr < input.length && /[0-9]/.test(input[tempPtr])) {
+                        numStr += input[tempPtr];
+                        tempPtr++;
+                    }
+
+                    if (numStr.endsWith('00')) {
+                        const digitsVal = numStr.slice(0, -2);
+                        const val = parseInt(digitsVal, 10);
+                        const posNumber = val - 3;
+                        const shiftedIdx = posNumber - 1;
+
+                        let origIdx = (shiftedIdx - 1) % ALPHABET.length;
+                        if (origIdx < 0) origIdx += ALPHABET.length;
+
+                        let letter = ALPHABET[origIdx].toLowerCase();
+
+                        if (isUmlaut) {
+                            letter = 'ü';
+                        } else if (isAccent) {
+                            const accentsLower = { 'a': 'á', 'e': 'é', 'i': 'í', 'o': 'ó', 'u': 'ú' };
+                            letter = accentsLower[letter] || letter;
+                        }
+
+                        result += letter;
+                        i = tempPtr;
+                        continue;
+                    }
+                }
+
+                // Fallback for any unknown single character
+                result += char;
+                i++;
+            }
+
+            document.getElementById('dec-output').value = result;
+            addHistoryItem('Descodificación', input, result);
+            showToast('¡Texto descodificado con éxito!');
+        }
+
+        function copyFromTextarea(id, successMessage) {
+            const textarea = document.getElementById(id);
+            if (!textarea.value) {
+                showToast('No hay texto para copiar');
+                return;
+            }
+            
+            // Standard fallback copy for iFrames / Restricted web views
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMessage || 'Copiado al portapapeles');
+            } catch (err) {
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    showToast(successMessage || 'Copiado al portapapeles');
+                }).catch(() => {
+                    showToast('Error al copiar');
+                });
+            }
+        }
+
+        async function pasteToTextarea(id) {
+            const textarea = document.getElementById(id);
+            try {
+                const text = await navigator.clipboard.readText();
+                textarea.value = text;
+                showToast('Texto pegado');
+            } catch (err) {
+                showToast('Haz clic y usa Ctrl+V para pegar');
+            }
+        }
+
+        function useForDecoding() {
+            const encoded = document.getElementById('enc-output').value;
+            if (!encoded) {
+                showToast('Primero genera un resultado cifrado');
+                return;
+            }
+            document.getElementById('dec-input').value = encoded;
+            showToast('Transferido a Descodificar ↗');
+            document.getElementById('dec-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function useAsOriginal() {
+            const decoded = document.getElementById('dec-output').value;
+            if (!decoded) {
+                showToast('Primero genera un resultado descodificado');
+                return;
+            }
+            document.getElementById('enc-input').value = decoded;
+            showToast('Transferido a Texto original ↗');
+            document.getElementById('enc-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        const historyData = [];
+
+        function addHistoryItem(type, input, output) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            historyData.unshift({ type, input, output, time });
+
+            if (historyData.length > 10) historyData.pop();
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (historyData.length === 0) {
+                container.innerHTML = `
+                    <p id="history-empty" class="text-gray-500 text-sm text-center py-6">
+                        Aún no has realizado conversiones en esta sesión.
+                    </p>
+                `;
+                return;
+            }
+
+            container.innerHTML = historyData.map((item, idx) => `
+                <div class="bg-inputBg/80 border border-borderDark rounded-xl p-4 transition hover:border-borderDark/80">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${item.type === 'Codificación' ? 'bg-accentMint/20 text-accentMint' : 'bg-cyan-500/20 text-cyan-300'}">
+                            ${item.type}
+                        </span>
+                        <span class="text-xs text-gray-500 font-mono">${item.time}</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                        <div class="bg-cardBg/60 p-2.5 rounded-lg border border-borderDark/50">
+                            <span class="text-gray-400 block mb-1 font-sans text-[11px]">Entrada:</span>
+                            <p class="text-gray-200 truncate">${escapeHtml(item.input)}</p>
+                        </div>
+                        <div class="bg-cardBg/60 p-2.5 rounded-lg border border-borderDark/50">
+                            <span class="text-gray-400 block mb-1 font-sans text-[11px]">Resultado:</span>
+                            <p class="text-accentMint truncate">${escapeHtml(item.output)}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            historyData.length = 0;
+            renderHistory();
+            showToast('Historial borrado');
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
